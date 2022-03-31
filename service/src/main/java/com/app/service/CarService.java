@@ -8,12 +8,14 @@ import com.app.persistence.validator.Validator;
 import com.app.service.exception.CarServiceException;
 import com.app.service.type.Sort;
 import org.eclipse.collections.impl.collector.BigDecimalSummaryStatistics;
-import org.eclipse.collections.impl.collector.Collectors2;
 
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import static java.util.Comparator.*;
+import static java.util.stream.Collectors.*;
+import static org.eclipse.collections.impl.collector.Collectors2.summarizingBigDecimal;
 
 public class CarService {
 
@@ -45,10 +47,10 @@ public class CarService {
             throw new CarServiceException("Sort object is null");
         }
         List<Car> sortedCars = switch (sort) {
-            case COLOR -> cars.stream().sorted(Comparator.comparing(Car::getColor)).toList();
-            case MODEL -> cars.stream().sorted(Comparator.comparing(Car::getModel)).toList();
-            case MILEAGE -> cars.stream().sorted(Comparator.comparing(Car::getMileage)).toList();
-            default -> cars.stream().sorted(Comparator.comparing(Car::getPrice)).toList();
+            case COLOR -> cars.stream().sorted(comparing(Car::getColor)).toList();
+            case MODEL -> cars.stream().sorted(comparing(Car::getModel)).toList();
+            case MILEAGE -> cars.stream().sorted(comparing(Car::getMileage)).toList();
+            default -> cars.stream().sorted(comparing(Car::getPrice)).toList();
         };
         if (descending) {
             Collections.reverse(sortedCars);
@@ -74,11 +76,11 @@ public class CarService {
      */
     public Map<Color, Long> getColorsWithCarsNumber() {
         return cars.stream()
-                .collect(Collectors.groupingBy(Car::getColor, Collectors.counting()))
+                .collect(groupingBy(Car::getColor, counting()))
                 .entrySet()
                 .stream()
-                .sorted(Comparator.comparingLong(Map.Entry::getValue))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Long::sum, LinkedHashMap::new));
+                .sorted(comparingLong(Map.Entry::getValue))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, Long::sum, LinkedHashMap::new));
     }
 
     /*
@@ -89,7 +91,7 @@ public class CarService {
      */
     public Map<String, Optional<Car>> getModelsWithMostExpensiveCars() {
         return cars.stream()
-                .collect(Collectors.groupingBy(Car::getModel, Collectors.maxBy(Comparator.comparing(Car::getPrice))));
+                .collect(groupingBy(Car::getModel, maxBy(comparing(Car::getPrice))));
     }
 
     /*
@@ -110,7 +112,7 @@ public class CarService {
     public void printPriceStatistics() {
         BigDecimalSummaryStatistics bigDecimalSummaryStatistics = cars.stream()
                 .map(Car::getPrice)
-                .collect(Collectors2.summarizingBigDecimal(e -> e));
+                .collect(summarizingBigDecimal(e -> e));
         System.out.println("Price max value - " + bigDecimalSummaryStatistics.getMax());
         System.out.println("Price min value - " + bigDecimalSummaryStatistics.getMin());
         System.out.println("Price average value - " + bigDecimalSummaryStatistics.getAverage());
@@ -123,7 +125,7 @@ public class CarService {
      */
     public List<Car> getMostExpensiveCars() {
         return cars.stream()
-                .collect(Collectors.groupingBy(Car::getPrice))
+                .collect(groupingBy(Car::getPrice))
                 .entrySet()
                 .stream()
                 .max(Map.Entry.comparingByKey())
@@ -149,11 +151,11 @@ public class CarService {
      */
     public Map<String, List<Car>> getComponentsWithCars() {
         return getComponents().stream()
-                .collect(Collectors.toMap(Function.identity(), this::getCarsWhichContainComponent))
+                .collect(toMap(Function.identity(), this::getCarsWhichContainComponent))
                 .entrySet()
                 .stream()
-                .sorted(Comparator.comparingInt(entry -> entry.getValue().size()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
+                .sorted(comparingInt(entry -> entry.getValue().size()))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
     }
 
     private List<String> getComponents() {
@@ -179,7 +181,7 @@ public class CarService {
     public List<Car> getCarsWithPriceInRange(BigDecimal minPrice, BigDecimal maxPrice) {
         return cars.stream()
                 .filter(car -> car.hasPriceInRange(minPrice, maxPrice))
-                .sorted(Comparator.comparing(Car::getModel))
+                .sorted(comparing(Car::getModel))
                 .toList();
     }
 
