@@ -7,15 +7,21 @@ import com.app.persistence.validator.CarValidator;
 import com.app.persistence.validator.Validator;
 import com.app.service.exception.CarServiceException;
 import com.app.service.type.Sort;
-import org.eclipse.collections.impl.collector.BigDecimalSummaryStatistics;
+import com.app.service.type.Statistics;
+import com.app.service.type.StatisticsType;
+import org.eclipse.collections.impl.collector.Collectors2;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static com.app.persistence.model.CarUtils.*;
 import static java.util.Comparator.*;
 import static java.util.stream.Collectors.*;
-import static org.eclipse.collections.impl.collector.Collectors2.summarizingBigDecimal;
 
 public class CarService {
 
@@ -47,14 +53,11 @@ public class CarService {
             throw new CarServiceException("Sort object is null");
         }
         List<Car> sortedCars = switch (sort) {
-            case COLOR -> cars.stream().sorted(comparing(Car::getColor)).toList();
-            case MODEL -> cars.stream().sorted(comparing(Car::getModel)).toList();
-            case MILEAGE -> cars.stream().sorted(comparing(Car::getMileage)).toList();
-            default -> cars.stream().sorted(comparing(Car::getPrice)).toList();
+            case COLOR -> cars.stream().sorted(descending ? compareByColorDesc : compareByColorAsc).toList();
+            case MODEL -> cars.stream().sorted(descending ? compareByModelDesc : compareByModelAsc).toList();
+            case MILEAGE -> cars.stream().sorted(descending ? compareByMileageDesc : compareByMileageAsc).toList();
+            case PRICE -> cars.stream().sorted(descending ? compareByPriceDesc : compareByPriceAsc).toList();
         };
-        if (descending) {
-            Collections.reverse(sortedCars);
-        }
         return sortedCars;
     }
 
@@ -63,9 +66,12 @@ public class CarService {
         przebieg o wartości większej niż wartość podana jako argument
         metody.
      */
-    public List<Car> getCarsWithHigherMileage(int mileage) {
+    public List<Car> findCarsWithMileageGreaterThan(int mileage) {
+        if (mileage < 0) {
+            throw new CarServiceException("Mileage must be positive!");
+        }
         return cars.stream()
-                .filter(car -> car.hasHigherMileage(mileage))
+                .filter(car -> car.hasMileageGreaterThan(mileage))
                 .toList();
     }
 
@@ -89,9 +95,19 @@ public class CarService {
         najdroższy samochód o tej nazwie modelu. Mapa powinna być
         posortowana kluczami malejąco.
      */
-    public Map<String, Optional<Car>> getModelsWithMostExpensiveCars() {
+    public Map<String, List<Car>> getModelsWithMostExpensiveCars() {
         return cars.stream()
-                .collect(groupingBy(Car::getModel, maxBy(comparing(Car::getPrice))));
+                .collect(groupingBy(Car::getModel, collectingAndThen(mapping(Function.identity(), toList()), CarService::getMostExpensiveCars)));
+    }
+
+    private static List<Car> getMostExpensiveCars(List<Car> cars) {
+        return cars.stream()
+                .collect(Collectors.groupingBy(Car::getPrice))
+                .entrySet()
+                .stream()
+                .max(Map.Entry.comparingByKey())
+                .map(Map.Entry::getValue)
+                .orElse(Collections.emptyList());
     }
 
     /*
@@ -100,22 +116,21 @@ public class CarService {
         najmniejsza, wartość największa dla pól opisujących cenę oraz
         przebieg samochodów.
      */
-    public void printMileageStatistics() {
-        DoubleSummaryStatistics doubleSummaryStatistics = cars.stream()
-                .mapToDouble(Car::getMileage)
-                .summaryStatistics();
-        System.out.println("Mileage max value - " + doubleSummaryStatistics.getMax());
-        System.out.println("Mileage min value - " + doubleSummaryStatistics.getMin());
-        System.out.println("Mileage average value - " + doubleSummaryStatistics.getAverage());
-    }
+    public Statistics getStatistics(StatisticsType statisticsType) {
+        if (statisticsType == null) {
+            throw new CarServiceException("StatisticsType object is null");
+        }
 
-    public void printPriceStatistics() {
-        BigDecimalSummaryStatistics bigDecimalSummaryStatistics = cars.stream()
-                .map(Car::getPrice)
-                .collect(summarizingBigDecimal(e -> e));
-        System.out.println("Price max value - " + bigDecimalSummaryStatistics.getMax());
-        System.out.println("Price min value - " + bigDecimalSummaryStatistics.getMin());
-        System.out.println("Price average value - " + bigDecimalSummaryStatistics.getAverage());
+        return switch (statisticsType) {
+            case MILEAGE -> Statistics.toStatistics(cars
+                    .stream()
+                    .collect(Collectors.summarizingInt(Car::getMileage))
+            );
+            case PRICE -> Statistics.toStatistics(cars
+                    .stream()
+                    .collect(Collectors2.summarizingBigDecimal(Car::getPrice))
+            );
+        };
     }
 
     /*
@@ -130,7 +145,7 @@ public class CarService {
                 .stream()
                 .max(Map.Entry.comparingByKey())
                 .map(Map.Entry::getValue)
-                .orElse(null);
+                .orElse(Collections.emptyList());
     }
 
     /*
@@ -139,7 +154,7 @@ public class CarService {
      */
     public List<Car> getCarsWithSortedComponents() {
         return cars.stream()
-                .map(Car::getCarWithSortedComponents)
+                .map(Car::withSortedComponents)
                 .toList();
     }
 
@@ -147,7 +162,7 @@ public class CarService {
         Metoda zwraca mapę, której kluczem jest nazwa komponentu,
         natomiast wartością jest kolekcja samochodów, które posiadają
         ten komponent. Pary w mapie powinny być posortowane malejąco po
-        ilości elementów w kolekcji reprezentującej wartość pary.
+        liczbie elementów w kolekcji reprezentującej wartość pary.
      */
     public Map<String, List<Car>> getComponentsWithCars() {
         return getComponents().stream()
@@ -178,7 +193,16 @@ public class CarService {
         jako argument metody. Kolekcja powinna być posortowana
         alfabetycznie według nazw samochodów.
      */
-    public List<Car> getCarsWithPriceInRange(BigDecimal minPrice, BigDecimal maxPrice) {
+    public List<Car> findCarsWithPriceInRange(BigDecimal minPrice, BigDecimal maxPrice) {
+        if (minPrice == null || maxPrice == null) {
+            throw new CarServiceException("BigDecimal object is null");
+        }
+        if (minPrice.compareTo(BigDecimal.ZERO) < 0 || maxPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new CarServiceException("Given price must be positive");
+        }
+        if (minPrice.compareTo(maxPrice) > 0) {
+            throw new CarServiceException("minPrice cannot be greater than maxPrice");
+        }
         return cars.stream()
                 .filter(car -> car.hasPriceInRange(minPrice, maxPrice))
                 .sorted(comparing(Car::getModel))

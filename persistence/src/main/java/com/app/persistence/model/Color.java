@@ -1,5 +1,5 @@
 package com.app.persistence.model;
 
 public enum Color {
-    RED, WHITE, BLACK, GREEN
+    RED, WHITE, BLACK, GREEN, BLUE
 }
