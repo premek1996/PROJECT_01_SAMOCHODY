@@ -1,5 +1,6 @@
 package com.app.service.type;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -11,6 +12,7 @@ import java.util.IntSummaryStatistics;
 @RequiredArgsConstructor
 @EqualsAndHashCode
 @ToString
+@Builder
 public class Statistics {
 
     private final BigDecimal min;

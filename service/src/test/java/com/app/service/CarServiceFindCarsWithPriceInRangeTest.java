@@ -4,12 +4,12 @@ import com.app.persistence.model.Car;
 import com.app.service.exception.CarServiceException;
 import com.app.service.extensions.CarServiceExtension;
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.app.service.utils.CarsUtils.BMW;
 import static com.app.service.utils.CarsUtils.MERCEDES;
@@ -59,6 +59,18 @@ public class CarServiceFindCarsWithPriceInRangeTest {
         List<Car> expectedCars = List.of(BMW, MERCEDES);
         assertThat(carService.findCarsWithPriceInRange(BigDecimal.valueOf(100), BigDecimal.valueOf(140)))
                 .containsExactlyElementsOf(expectedCars);
+    }
+
+    @TestFactory
+    Stream<DynamicTest> test6() {
+        return Stream.of(
+                DynamicTest.dynamicTest("When there are no cars with price in given range",
+                        () -> Assertions.assertTrue(carService.findCarsWithPriceInRange(BigDecimal.valueOf(200), BigDecimal.valueOf(250)).isEmpty())),
+                DynamicTest.dynamicTest("When minPrice is greater than maxPrice",
+                        () -> Assertions.assertThrows(CarServiceException.class, () -> carService.findCarsWithPriceInRange(BigDecimal.valueOf(10), BigDecimal.valueOf(5)))),
+                DynamicTest.dynamicTest("When given price is negative",
+                        () -> Assertions.assertThrows(CarServiceException.class, () -> carService.findCarsWithPriceInRange(BigDecimal.valueOf(-1), BigDecimal.ONE)))
+        );
     }
 
 }

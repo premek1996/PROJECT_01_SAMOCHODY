@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
@@ -21,23 +23,31 @@ public class CarServiceFindCarsWithMileageGreaterThanTest {
     private final CarService carService;
 
     @Test
-    @DisplayName("When mileage value is not positive")
+    @DisplayName("When mileage value is negative")
     void test1() {
         assertThatThrownBy(() -> carService.findCarsWithMileageGreaterThan(-1))
                 .isInstanceOf(CarServiceException.class)
                 .hasMessage("Mileage must be positive!");
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {-100, -50, -20, -10, -1})
+    void test2(int mileage) {
+        assertThatThrownBy(() -> carService.findCarsWithMileageGreaterThan(mileage))
+                .isInstanceOf(CarServiceException.class)
+                .hasMessage("Mileage must be positive!");
+    }
+
     @Test
     @DisplayName("When there are no cars with mileage greater than provided value")
-    void test2() {
+    void test3() {
         assertThat(carService.findCarsWithMileageGreaterThan(10000))
                 .isEmpty();
     }
 
     @Test
     @DisplayName("When there are cars with mileage greater than provided value")
-    void test3() {
+    void test4() {
         var expectedCars = List.of(MAZDA, MERCEDES);
         assertThat(carService.findCarsWithMileageGreaterThan(1500))
                 .hasSize(2)

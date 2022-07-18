@@ -2,15 +2,16 @@ package com.app.service;
 
 import com.app.service.exception.CarServiceException;
 import com.app.service.extensions.CarServiceExtension;
-import com.app.service.type.Statistics;
 import com.app.service.type.StatisticsType;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
-import java.math.BigDecimal;
-
+import static com.app.service.utils.CarsUtils.STATISTICS_MILEAGE;
+import static com.app.service.utils.CarsUtils.STATISTICS_PRICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -31,17 +32,26 @@ public class CarServiceGetStatisticsTest {
     @Test
     @DisplayName("When StatisticsType is mileage")
     void test2() {
-        Statistics expectedStatistics = new Statistics(new BigDecimal("1500"), new BigDecimal("1900.0"), new BigDecimal("2500"));
         assertThat(carService.getStatistics(StatisticsType.MILEAGE))
-                .isEqualTo(expectedStatistics);
+                .isEqualTo(STATISTICS_MILEAGE);
     }
 
     @Test
     @DisplayName("When StatisticsType is price")
     void test3() {
-        Statistics expectedStatistics = new Statistics(new BigDecimal("120"), new BigDecimal("136.6666666666666666666666666666667"), new BigDecimal("160"));
         assertThat(carService.getStatistics(StatisticsType.PRICE))
-                .isEqualTo(expectedStatistics);
+                .isEqualTo(STATISTICS_PRICE);
+    }
+
+    @ParameterizedTest
+    @EnumSource(StatisticsType.class)
+    void test4(StatisticsType statisticsType) {
+        switch (statisticsType) {
+            case PRICE -> assertThat(carService.getStatistics(StatisticsType.PRICE))
+                    .isEqualTo(STATISTICS_PRICE);
+            case MILEAGE -> assertThat(carService.getStatistics(StatisticsType.MILEAGE))
+                    .isEqualTo(STATISTICS_MILEAGE);
+        }
     }
 
 }

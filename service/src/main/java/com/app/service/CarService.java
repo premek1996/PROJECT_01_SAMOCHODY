@@ -52,7 +52,7 @@ public class CarService {
         if (sort == null) {
             throw new CarServiceException("Sort object is null");
         }
-        List<Car> sortedCars = switch (sort) {
+        var sortedCars = switch (sort) {
             case COLOR -> cars.stream().sorted(descending ? compareByColorDesc : compareByColorAsc).toList();
             case MODEL -> cars.stream().sorted(descending ? compareByModelDesc : compareByModelAsc).toList();
             case MILEAGE -> cars.stream().sorted(descending ? compareByMileageDesc : compareByMileageAsc).toList();

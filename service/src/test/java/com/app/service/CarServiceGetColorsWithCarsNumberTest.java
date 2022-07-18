@@ -20,7 +20,7 @@ public class CarServiceGetColorsWithCarsNumberTest {
     @Test
     @DisplayName("When cars are available")
     void test1() {
-        Map<Color, Long> expectedColorsWithCarsNumber = Map.of(Color.RED, 1L,
+        var expectedColorsWithCarsNumber = Map.of(Color.RED, 1L,
                 Color.GREEN, 1L,
                 Color.BLUE, 1L);
         assertThat(carService.getColorsWithCarsNumber())

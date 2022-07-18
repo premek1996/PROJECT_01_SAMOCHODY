@@ -10,7 +10,7 @@ public class App {
     private static final String INPUT_FILE_PATH = "data\\cars.json";
 
     public static void main(String[] args) {
-        CarService carService = new CarService(INPUT_FILE_PATH);
+        var carService = new CarService(INPUT_FILE_PATH);
         System.out.println(carService.findCarsWithMileageGreaterThan(1600));
         System.out.println(carService.getColorsWithCarsNumber());
         System.out.println(carService.getModelsWithMostExpensiveCars());

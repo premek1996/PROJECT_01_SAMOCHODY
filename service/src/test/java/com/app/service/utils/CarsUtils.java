@@ -2,6 +2,7 @@ package com.app.service.utils;
 
 import com.app.persistence.model.Car;
 import com.app.persistence.model.Color;
+import com.app.service.type.Statistics;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -60,4 +61,17 @@ public interface CarsUtils {
             .mileage(2500)
             .components(List.of("AIR CONDITIONING", "BLUETOOTH"))
             .build();
+
+    Statistics STATISTICS_PRICE = Statistics.builder()
+            .min(new BigDecimal("120"))
+            .avg(new BigDecimal("136.6666666666666666666666666666667"))
+            .max(new BigDecimal("160"))
+            .build();
+
+    Statistics STATISTICS_MILEAGE = Statistics.builder()
+            .min(new BigDecimal("1500"))
+            .avg(new BigDecimal("1900.0"))
+            .max(new BigDecimal("2500"))
+            .build();
+
 }
