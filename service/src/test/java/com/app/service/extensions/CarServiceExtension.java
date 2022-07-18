@@ -22,18 +22,3 @@ public class CarServiceExtension implements ParameterResolver {
     }
 
 }
-
-// TODO
-// testy parametryzowane mozesz uzyc tam gdzie masz jako argument
-// enum, napis ktory bedzie przyjmowal kilka wartosci, mileage
-// bo chodzi o to ze jak masznp mileaga to robisz zestaw danych
-// np [-1, 0, 1000, 2000]
-
-
-// Wybierz dowolna klase z testami i z rob testy dynamiczne
-
-// Wybioerz metode ktora przyjmuje np int ale moze byc tez string
-// czy enum i pusc ja 1000 razy losujac rozne wartosci i sprawdz
-// czy zawsze dziala - repeatable test
-
-//
